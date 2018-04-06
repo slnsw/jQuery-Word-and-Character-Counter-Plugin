@@ -272,7 +272,34 @@
 
           // Get the word count by counting the spaces ( after eliminating trailing white space )
           var wordCount = text.replace(/\s+/g, " ").split(" ").length;
+          var textBreakCount = (text.match(/\n/g) || []).length;
           text = $.trim(text);
+
+          // Test to see if text contains line breaks, and handle accordingly.
+          if (textBreakCount > 0) {
+            var textBreaks = text.split("\n"),
+            textWithBreaks = [],
+            newWordCount = 0,
+            reachedWordLimit = false,
+            lineWords,
+            i,
+            j;
+            for (i = 0; i < textBreakCount; i++) {
+              if (reachedWordLimit) {
+                break;
+              }
+              lineWords = textBreaks[i].replace(/\s+/g, ' ').split(' ');
+              newWordCount += lineWords.length;
+
+              if (newWordCount > numOfWords) {
+                reachedWordLimit = true;
+                for (j = newWordCount; j > numOfWords; j--) {
+                  lineWords.pop();
+                }
+              }
+              textWithBreaks[i] = $.trim(lineWords.join(' '));
+            }
+          }
 
           // Make it worth executing
           if (numOfWords <= 0 || numOfWords === wordCount) {
@@ -280,7 +307,12 @@
           } else {
             text = $.trim(text).split(" ");
             text.splice(numOfWords, wordCount, "");
-            return $.trim(text.join(" "));
+
+            var output = $.trim(text.join(" "));
+            if (textBreakCount > 0) {
+              output = $.trim(textWithBreaks.join("\n"));
+            }
+            return output;
           }
         },
         // If the goal is passed, trim the chars/words down to what is allowed. Also, reset the counter.
